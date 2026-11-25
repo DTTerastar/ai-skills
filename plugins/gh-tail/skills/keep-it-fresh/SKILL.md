@@ -1,6 +1,6 @@
 ---
 name: keep-it-fresh
-description: Keep your picture of GitHub fresh, so you never tell the user a PR or issue is still waiting on them after they merged, closed or answered it. Use when the user says "keep it fresh", when you have opened PRs or issues in this session and will report on them again, or when the user wants to hear about comments, reviews, merges, releases or deployments as they happen. Also reports CI checks as they finish. Uses the gh-tail CLI and a checks script under the Monitor tool.
+description: Keep your picture of GitHub fresh, so you never tell the user a PR or issue is still waiting on them after they merged, closed or answered it. Use when the user says "keep it fresh", when you have opened PRs or issues in this session and will report on them again, or when the user wants to hear about comments, reviews, merges, releases or deployments as they happen. Also reports CI checks and Crow CI pipelines as they finish. Uses the gh-tail CLI and two small scripts under the Monitor tool.
 ---
 
 # Keep it fresh
@@ -27,6 +27,8 @@ gh-tail has no CI events. After each push to a PR, watch its checks with the scr
 Monitor(description: "checks on owner/repo#4", timeout_ms: 1800000,
   command: "<this skill's directory>/scripts/watch-checks.sh owner/repo 4")
 ```
+
+Where a repository builds on Crow CI, `scripts/watch-crow.sh owner/repo` in the same directory prints one line each time a pipeline finishes or is blocked waiting for approval, including pipelines for pushes and deployments that are not on a PR. It runs until stopped and needs the `crow` CLI with a server configured.
 
 - `-n 0` stops a new watch from replaying old events as new. Without `jq --unbuffered`, nothing arrives.
 - `gh tail --help` lists the other kinds (release, tag, branch, deployment) and `--filter`, such as `-actor:*[bot]`.

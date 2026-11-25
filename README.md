@@ -14,7 +14,7 @@ repositories it has open PRs and issues in, so it stops telling you something is
 after you merged or closed it. Each event arrives as one notification: PR and issue comments,
 reviews, approvals, merges, releases, tags, branches and deployments. It runs
 [gh-tail](https://github.com/KimNorgaard/gh-tail) under Claude Code's Monitor tool, one watch per
-repository. A small script reports a PR's CI checks as they finish. It also covers which `--kinds` to pick, filtering to your own PRs, and when to tell you
+repository. Two small scripts report a PR's CI checks and a repository's Crow CI pipelines as they finish. It also covers which `--kinds` to pick, filtering to your own PRs, and when to tell you
 about an event.
 
 It needs gh-tail 0.3.0 or later on each machine:
