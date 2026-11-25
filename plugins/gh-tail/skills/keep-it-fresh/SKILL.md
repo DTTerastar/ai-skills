@@ -1,84 +1,58 @@
 ---
 name: keep-it-fresh
-description: Keep your picture of GitHub fresh while you work, so you never tell the user a PR or issue is still waiting on them after they merged, closed or answered it. Use when the user says "keep it fresh", when you have opened PRs or issues in this session and will report on them again, or when the user wants to be told about comments, reviews, merges, releases or deployments as they happen. Watches live repository activity as one-line events, using the gh-tail CLI and the Monitor tool. Not for CI check results; use `gh pr checks --watch` for those.
+description: Keep your picture of the user's work fresh by running commands under the Monitor tool, so you never tell them a PR, issue or build is still waiting on them after it was merged, closed, answered or finished. Use when the user says "keep it fresh", when you have opened PRs or issues in this session and will report on them again, or when the user wants to hear about comments, reviews, merges, CI results or deployments as they happen. Has commands for GitHub (gh-tail), PR checks and Crow CI, and says how to write one for anything else.
 ---
 
 # Keep it fresh
 
-What you know about a PR or issue is only true as of when you last looked. The user merges, closes and comments without telling you, and a status you repeat from memory may be hours out of date. Keeping it fresh means watching the repositories you have open work in, so each change reaches you as it happens and what you tell the user matches GitHub.
+What you know about a PR, issue or build is only true as of when you last looked. The user merges, closes and comments without telling you. Keep a command running under the Monitor tool for each thing you have told the user is waiting on them, so that what you say matches reality. When a line arrives, update your picture before you next mention that item.
 
-**What to watch:** every PR and issue you opened in this session or have told the user is waiting on them, plus anything they ask you to follow. Run one watch per repository, because gh-tail follows one repository at a time. When work starts in another repository, start a watch there too.
+A command suits Monitor when it prints **one line per change** and nothing else:
 
-**When an event arrives:** update your picture before you next mention that item. A merged or closed PR is no longer something the user needs to do.
+- At startup it prints at most the last few things that happened, then only what changes. Those few lines are useful: they bring you up to date and cover anything missed since an earlier watch ended. The aim is not a perfect record; it is not telling the user to do something they already did.
+- Every stage of a pipe flushes per line (`jq --unbuffered`, `grep --line-buffered`, `sed -u`).
+- Errors reach stdout (`2>&1`), so a broken watch is not a silent one.
+- It exits when the thing it watches is finished, or runs until you stop it with TaskStop.
 
-The tool is [gh-tail](https://github.com/KimNorgaard/gh-tail), a gh extension run as `gh tail`. It polls a repository and prints one line per event. Run it under the **Monitor** tool so that each line arrives as a notification while you keep working. It uses `gh`'s auth and ETag caching, so an idle repo costs nothing against the rate limit.
+## GitHub: PRs, issues, reviews, merges, releases, deployments
 
-## Setup (once per machine)
-
-```sh
-gh tail --version   # want 0.3.0 or later
-```
-
-If it's missing, run `gh extension install KimNorgaard/gh-tail`. If it's older than 0.3.0 (no comment, review or deployment events), run `gh extension upgrade tail`. A standalone `gh-tail` left in `~/.local/bin` by the old `0.2.1-dt.*` preview builds is stale: delete it, so nothing runs it by mistake.
-
-## Start a watch
-
-Always pipe it (Monitor does). With no TTY, the spinner and status line are off and the output is plain rows. Always pass `-n 0`, so a restart doesn't replay old events as if they were new. Use `</dev/null` and `2>&1`, so errors show up as `gh-tail: …` lines instead of being lost.
-
-```
-Monitor(
-  description: "gh-tail on owner/repo",
-  timeout_ms: 1800000,
-  command: "gh tail -R owner/repo --kinds 'pr:*,issue:*' -n 0 2>&1 </dev/null",
-)
-```
-
-**Watch only your PRs or issues:** use JSON and filter on the numbers. It is the only reliable match, because comment text can mention other numbers.
+One watch per repository. `-n 5` shows the last five events at startup, which may be ones you have already seen.
 
 ```sh
-gh tail -R owner/repo --kinds 'pr:*' -n 0 --json 2> >(sed -u 's/^/ERROR /') </dev/null \
+gh tail -R owner/repo --kinds 'pr:*,issue:*' -n 5 2>&1 </dev/null
+```
+
+In a busy repository, keep only your own numbers:
+
+```sh
+gh tail -R owner/repo --kinds 'pr:*,issue:*' -n 5 --json 2> >(sed -u 's/^/ERROR /') </dev/null \
   | jq --unbuffered -r 'select(.number | IN(4, 7)) | "\(.action) @\(.actor // "-") \(.text) \(.url // "")"'
 ```
 
-`jq --unbuffered` is required, or lines sit in the buffer and never arrive.
+`gh tail --help` lists the other kinds and `--filter`. If it is missing, run `gh extension install KimNorgaard/gh-tail`. Comment text is cut at 200 characters, so read the whole comment before acting on it. Events arrive up to a minute late.
 
-## Kinds
+## PR checks
 
-`--kinds` decides which APIs are polled, so select only what's needed. `kind` gets its default actions, `kind:action` one action, `kind:*` all of them.
+One line per finished check, then it exits. Start it again after each push.
 
-| Want | `--kinds` |
-|------|-----------|
-| Everything on PRs and issues | `'pr:*,issue:*'` |
-| PR discussion only | `pr:commented,pr:approved,pr:changes_requested,pr:reviewed` |
-| Lifecycle only (default) | `pr,issue` (opened, closed, merged) |
-| Releases and tags | `release,tag` |
-| Deployments / failures | `deployment` / `deployment:failure` |
-
-`commented` covers conversation comments and inline code comments. An inline comment's text starts with `#N path:line:`. `reviewed` is a review submitted as a comment, neither approval nor change request.
-
-`--filter` hides events after they are fetched: `-actor:*[bot]` drops bots, `-actor:@me` drops the user's own actions (including ones Claude took on their account), `label:bug`, `actor:kim`. Comment events have no `author`, so don't filter them with `author:`.
-
-## Reading events
-
-Plain row: `TIME  KIND  ACTION  ACTOR  TEXT`, for example
-
-```
-2026-11-24 17:10:31  pr  approved   babakks  #15100 Revoke CLI OAuth tokens on logout: Looks good to me now.
-2026-11-24 17:04:07  pr  commented  Copilot  #15149 docs/SKILL.md:49: Requirement: classify …
+```sh
+prev=; while :; do s=$(gh pr checks 4 -R owner/repo --json name,bucket)
+  cur=$(jq -r '.[] | select(.bucket != "pending" and .bucket != "skipping") | "check \(.bucket) \(.name)"' <<<"$s" | sort)
+  comm -13 <(echo "$prev") <(echo "$cur"); prev=$cur
+  jq -e 'length > 0 and all(.bucket != "pending")' <<<"$s" >/dev/null && break; sleep 30; done
 ```
 
-Comment and review bodies are cut at 200 characters. When a comment needs action, read it in full: `gh pr view N -R owner/repo --comments`, `gh api repos/owner/repo/pulls/N/comments` for inline comments, or the event's URL with `--json`.
+## Crow CI pipelines
 
-## While it runs
+One line each time a pipeline finishes or is blocked waiting for approval. PR pipelines also show up as PR checks; this covers pushes and deployments too.
 
-- If `gh-tail: …` error lines repeat, such as auth, 404 or rate limit, tell the user instead of restarting in a loop.
-- Stop a watch with TaskStop when nothing you are tracking in that repository is still open, or when the user says so.
-- Act on events the user would care about: a review requesting changes, a question to them, a merge. Push a notification for those. Don't narrate routine ones.
+```sh
+f='.[] | select(.status | test("^(success|failure|killed|error|declined|blocked)$")) | "crow \(.status) #\(.number) \(.event) \(.ref) \(.message | split("\n")[0])"'
+prev=$(crow pipeline ls owner/repo -o json | jq -r "$f" | sort)
+while sleep 30; do cur=$(crow pipeline ls owner/repo -o json | jq -r "$f" | sort); [ -n "$cur" ] || continue
+  comm -13 <(echo "$prev") <(echo "$cur"); prev=$cur; done
+```
 
-## Limits
+## Anything else
 
-- Polls every 60s at most (or GitHub's `X-Poll-Interval`), so events arrive up to a minute or so late. Reopened, labeled and assigned events come from the Events API and can lag from minutes to hours.
-- Dismissed and pending reviews aren't reported. Edits to existing comments aren't reported.
-- A busy repo can drop events beyond the latest 100 comments or updated issues between two polls.
-- No CI or check-run events.
-- No resume: events that happen while no watch is running are not replayed by a later one started with `-n 0`.
+The last two are the same pattern, and it works for any tool that can list state: print the state as sorted lines, compare with the previous poll using `comm -13`, and print only the new lines. Tools that already stream (`tail -F`, `journalctl -f`, `kubectl get -w`, `mosquitto_sub`) need only a filter.

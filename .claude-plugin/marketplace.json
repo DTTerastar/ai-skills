@@ -11,8 +11,8 @@
     {
       "name": "gh-tail",
       "source": "./plugins/gh-tail",
-      "description": "Watch live GitHub activity (PR comments, reviews, merges, releases, deployments) with gh-tail under the Monitor tool",
-      "version": "0.3.0",
+      "description": "Keep an agent's picture of PRs, issues and builds fresh with commands under the Monitor tool: gh-tail, PR checks and Crow CI",
+      "version": "0.4.0",
       "keywords": [
         "github",
         "gh-tail",
