@@ -12,7 +12,7 @@ description: Watch live GitHub repository activity (PR and issue comments, revie
 Until KimNorgaard/gh-tail#4 (deployments) and #5 (comments and reviews) are released upstream, use the preview build in this repo's `gh-tail-preview` release. Check it first:
 
 ```sh
-gh-tail --version   # want 0.2.1-dt.1+pr4.pr5.* or a later upstream release
+gh-tail --version   # want 0.2.1-dt.2+pr4.pr5.* or later (older dt builds repeat deployment statuses: reinstall)
 ```
 
 If it's missing or older, install the preview into `~/.local/bin`, which is on PATH for login shells and Paseo:
