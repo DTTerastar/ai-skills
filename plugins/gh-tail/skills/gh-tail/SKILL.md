@@ -9,7 +9,22 @@ description: Watch live GitHub repository activity (PR and issue comments, revie
 
 ## Setup (once per machine)
 
-Check with `command -v gh-tail || gh extension list | grep -i tail`. Use whichever exists: a standalone `gh-tail` binary, or the gh extension as `gh tail …` (same flags). If neither exists, install the extension with `gh extension install KimNorgaard/gh-tail`, or `gh extension upgrade tail` if it's already installed. Comment, review and deployment events need a release that includes KimNorgaard/gh-tail#4 and #5. If `--kinds pr:commented` fails with `unknown action`, the installed version predates them: tell the user instead of falling back to polling by hand.
+Until KimNorgaard/gh-tail#4 (deployments) and #5 (comments and reviews) are released upstream, use the preview build in this repo's `gh-tail-preview` release. Check it first:
+
+```sh
+gh-tail --version   # want 0.2.1-dt.1+pr4.pr5.* or a later upstream release
+```
+
+If it's missing or older, install the preview into `~/.local/bin`, which is on PATH for login shells and Paseo:
+
+```sh
+os=$(uname -s | tr A-Z a-z); arch=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')
+mkdir -p ~/.local/bin
+gh release download gh-tail-preview -R DTTerastar/ai-skills -p "gh-tail-$os-$arch" -O ~/.local/bin/gh-tail --clobber
+chmod +x ~/.local/bin/gh-tail
+```
+
+Builds exist for linux and darwin, amd64 and arm64. If `gh release download` reports that the release is gone, upstream has shipped both PRs: use `gh extension install KimNorgaard/gh-tail` and run it as `gh tail` (same flags). If `--kinds pr:commented` fails with `unknown action`, the installed build is too old. Reinstall as above instead of polling by hand.
 
 ## Start a watch
 

@@ -15,15 +15,20 @@ reviews, approvals, merges, releases, tags, branches and deployments. It runs
 when it expires. It also covers which `--kinds` to pick, filtering to one PR, and when to tell you
 about an event.
 
-It needs the CLI on each machine:
+It needs the CLI on each machine. Until upstream releases
+[KimNorgaard/gh-tail#4](https://github.com/KimNorgaard/gh-tail/pull/4) (deployments) and
+[#5](https://github.com/KimNorgaard/gh-tail/pull/5) (comments and reviews), install the preview
+build from this repo's [`gh-tail-preview` release](https://github.com/DTTerastar/ai-skills/releases/tag/gh-tail-preview):
 
 ```sh
-gh extension install KimNorgaard/gh-tail
+os=$(uname -s | tr A-Z a-z); arch=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')
+mkdir -p ~/.local/bin
+gh release download gh-tail-preview -R DTTerastar/ai-skills -p "gh-tail-$os-$arch" -O ~/.local/bin/gh-tail --clobber
+chmod +x ~/.local/bin/gh-tail
 ```
 
-Comment, review and deployment events need a gh-tail release that includes
-[KimNorgaard/gh-tail#4](https://github.com/KimNorgaard/gh-tail/pull/4) and
-[#5](https://github.com/KimNorgaard/gh-tail/pull/5).
+The skill does this on its own when `gh-tail` is missing or too old. Once upstream ships, use
+`gh extension install KimNorgaard/gh-tail` instead.
 
 ## License
 
