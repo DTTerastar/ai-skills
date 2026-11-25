@@ -63,9 +63,8 @@ Plain row: `TIME  KIND  ACTION  ACTOR  TEXT`, for example
 
 Comment and review bodies are cut at 200 characters. When a comment needs action, read it in full: `gh pr view N -R owner/repo --comments`, `gh api repos/owner/repo/pulls/N/comments` for inline comments, or the event's URL with `--json`.
 
-## Keeping it running
+## While it runs
 
-- A Monitor lasts at most 30 minutes. When the expiry notice arrives, start the same command again (still with `-n 0`). Keep doing this as long as the user wants the watch.
 - If `gh-tail: …` error lines repeat, such as auth, 404 or rate limit, tell the user instead of restarting in a loop.
 - Stop with TaskStop when the PR is merged or closed, or when the user says so.
 - Act on events the user would care about: a review requesting changes, a question to them, a merge. Push a notification for those. Don't narrate routine ones.
@@ -76,3 +75,4 @@ Comment and review bodies are cut at 200 characters. When a comment needs action
 - Dismissed and pending reviews aren't reported. Edits to existing comments aren't reported.
 - A busy repo can drop events beyond the latest 100 comments or updated issues between two polls.
 - No CI or check-run events.
+- No resume: events that happen while no watch is running are not replayed by a later one started with `-n 0`.
