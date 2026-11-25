@@ -1,0 +1,18 @@
+{
+  "name": "dtterastar-skills",
+  "owner": { "name": "DTTerastar" },
+  "metadata": {
+    "description": "Public Claude Code skills from DTTerastar",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "gh-tail",
+      "source": "./plugins/gh-tail",
+      "description": "Watch live GitHub activity (PR comments, reviews, merges, releases, deployments) with gh-tail under the Monitor tool",
+      "version": "0.1.0",
+      "keywords": ["github", "gh-tail", "monitor"],
+      "strict": false
+    }
+  ]
+}

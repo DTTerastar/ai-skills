@@ -1,0 +1,10 @@
+{
+  "name": "gh-tail",
+  "version": "0.1.0",
+  "description": "Skill for watching live GitHub activity (comments, reviews, merges, releases, deployments) with the gh-tail CLI under the Monitor tool",
+  "author": { "name": "DTTerastar" },
+  "repository": "https://github.com/DTTerastar/ai-skills",
+  "license": "MIT",
+  "keywords": ["github", "gh-tail", "monitor", "pull-requests"],
+  "skills": "./skills/"
+}
