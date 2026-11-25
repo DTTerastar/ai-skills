@@ -9,23 +9,23 @@ What you know about a PR, issue or build is only true as of when you last looked
 
 A command suits Monitor when it prints **one line per change** and nothing else:
 
-- It says nothing about the state it finds at startup, and prints only what changes after.
+- At startup it prints at most the last few things that happened, then only what changes. Those few lines are useful: they bring you up to date and cover anything missed since an earlier watch ended. The aim is not a perfect record; it is not telling the user to do something they already did.
 - Every stage of a pipe flushes per line (`jq --unbuffered`, `grep --line-buffered`, `sed -u`).
 - Errors reach stdout (`2>&1`), so a broken watch is not a silent one.
 - It exits when the thing it watches is finished, or runs until you stop it with TaskStop.
 
 ## GitHub: PRs, issues, reviews, merges, releases, deployments
 
-One watch per repository. `-n 0` stops old events being replayed as new.
+One watch per repository. `-n 5` shows the last five events at startup, which may be ones you have already seen.
 
 ```sh
-gh tail -R owner/repo --kinds 'pr:*,issue:*' -n 0 2>&1 </dev/null
+gh tail -R owner/repo --kinds 'pr:*,issue:*' -n 5 2>&1 </dev/null
 ```
 
 In a busy repository, keep only your own numbers:
 
 ```sh
-gh tail -R owner/repo --kinds 'pr:*,issue:*' -n 0 --json 2> >(sed -u 's/^/ERROR /') </dev/null \
+gh tail -R owner/repo --kinds 'pr:*,issue:*' -n 5 --json 2> >(sed -u 's/^/ERROR /') </dev/null \
   | jq --unbuffered -r 'select(.number | IN(4, 7)) | "\(.action) @\(.actor // "-") \(.text) \(.url // "")"'
 ```
 
