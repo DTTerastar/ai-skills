@@ -5,26 +5,15 @@ description: Watch live GitHub repository activity (PR and issue comments, revie
 
 # Watching GitHub with gh-tail
 
-`gh-tail` (in `~/.local/bin`, on PATH) polls a repository and prints one line per event. Run it under the **Monitor** tool so that each line arrives as a notification while you keep working. It uses `gh`'s auth and ETag caching, so an idle repo costs nothing against the rate limit.
+[gh-tail](https://github.com/KimNorgaard/gh-tail), a gh extension run as `gh tail`, polls a repository and prints one line per event. Run it under the **Monitor** tool so that each line arrives as a notification while you keep working. It uses `gh`'s auth and ETag caching, so an idle repo costs nothing against the rate limit.
 
 ## Setup (once per machine)
 
-Until KimNorgaard/gh-tail#4 (deployments) and #5 (comments and reviews) are released upstream, use the preview build in this repo's `gh-tail-preview` release. Check it first:
-
 ```sh
-gh-tail --version   # want 0.2.1-dt.2+pr4.pr5.* or later (older dt builds repeat deployment statuses: reinstall)
+gh tail --version   # want 0.3.0 or later
 ```
 
-If it's missing or older, install the preview into `~/.local/bin`, which is on PATH for login shells and Paseo:
-
-```sh
-os=$(uname -s | tr A-Z a-z); arch=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')
-mkdir -p ~/.local/bin
-gh release download gh-tail-preview -R DTTerastar/ai-skills -p "gh-tail-$os-$arch" -O ~/.local/bin/gh-tail --clobber
-chmod +x ~/.local/bin/gh-tail
-```
-
-Builds exist for linux and darwin, amd64 and arm64. If `gh release download` reports that the release is gone, upstream has shipped both PRs: use `gh extension install KimNorgaard/gh-tail` and run it as `gh tail` (same flags). If `--kinds pr:commented` fails with `unknown action`, the installed build is too old. Reinstall as above instead of polling by hand.
+If it's missing, run `gh extension install KimNorgaard/gh-tail`. If it's older than 0.3.0 (no comment, review or deployment events), run `gh extension upgrade tail`. A standalone `gh-tail` left in `~/.local/bin` by the old `0.2.1-dt.*` preview builds is stale: delete it, so nothing runs it by mistake.
 
 ## Start a watch
 
@@ -34,14 +23,14 @@ Always pipe it (Monitor does). With no TTY, the spinner and status line are off 
 Monitor(
   description: "gh-tail on owner/repo",
   timeout_ms: 1800000,
-  command: "gh-tail -R owner/repo --kinds 'pr:*,issue:*' -n 0 2>&1 </dev/null",
+  command: "gh tail -R owner/repo --kinds 'pr:*,issue:*' -n 0 2>&1 </dev/null",
 )
 ```
 
 **Watch one PR or issue:** use JSON and filter on the number. It is the only reliable match, because comment text can mention other numbers.
 
 ```sh
-gh-tail -R owner/repo --kinds 'pr:*' -n 0 --json 2> >(sed -u 's/^/ERROR /') </dev/null \
+gh tail -R owner/repo --kinds 'pr:*' -n 0 --json 2> >(sed -u 's/^/ERROR /') </dev/null \
   | jq --unbuffered -r 'select(.number == 4) | "\(.action) @\(.actor // "-") \(.text) \(.url // "")"'
 ```
 

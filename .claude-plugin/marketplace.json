@@ -12,7 +12,7 @@
       "name": "gh-tail",
       "source": "./plugins/gh-tail",
       "description": "Watch live GitHub activity (PR comments, reviews, merges, releases, deployments) with gh-tail under the Monitor tool",
-      "version": "0.1.2",
+      "version": "0.2.0",
       "keywords": [
         "github",
         "gh-tail",
