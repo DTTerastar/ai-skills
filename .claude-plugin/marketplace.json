@@ -11,8 +11,8 @@
     {
       "name": "gh-tail",
       "source": "./plugins/gh-tail",
-      "description": "Keep an agent's picture of PRs, issues and builds fresh with commands under the Monitor tool: gh-tail, PR checks and Crow CI",
-      "version": "0.4.0",
+      "description": "Keep an agent's picture of PRs, issues and builds fresh with commands under the Monitor tool: gh-tail for GitHub activity and CI checks",
+      "version": "0.5.0",
       "keywords": [
         "github",
         "gh-tail",

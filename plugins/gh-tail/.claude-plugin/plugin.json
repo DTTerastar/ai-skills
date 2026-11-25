@@ -1,7 +1,7 @@
 {
   "name": "gh-tail",
-  "version": "0.4.0",
-  "description": "Skill for keeping an agent's picture of PRs, issues and builds fresh by running commands under the Monitor tool: gh-tail for GitHub activity, plus PR checks and Crow CI",
+  "version": "0.5.0",
+  "description": "Skill for keeping an agent's picture of PRs, issues and builds fresh by running commands under the Monitor tool: gh-tail for GitHub activity and CI checks",
   "author": {
     "name": "DTTerastar"
   },
